@@ -6,6 +6,24 @@ a two-stage LoRA adaptation of Qwen3.5-2B trained and evaluated on it. Stage 1 t
 image-to-summary description, stage 2 teaches VQA. Six stage-2 cells are compared: three
 adapter initialisations x two supervision targets.
 
+## Dataset
+
+The released data is hosted on Hugging Face:
+
+- **[SEM-VQA](https://huggingface.co/datasets/uhbuvbuvu/sem-vqa)** — the full corpus: 224,026
+  QA pairs over 47,981 SEM image panels (16,192 base images), spanning four reasoning levels
+  (observation, detection, identification, interpretation) across ceramics/production,
+  Ni-based alloy, and composite specimens. Train/test splits of 198,764 / 23,763 QA pairs are
+  provided, plus a 1,499-QA benchmark pool held out and curated separately into SEM-VQA-Bench.
+  Every image is sourced from peer-reviewed, open-access materials-science articles. CC BY 4.0.
+- **[SEM-VQA-Bench](https://huggingface.co/datasets/uhbuvbuvu/sem-vqa-bench)** — the frozen
+  300-image / ~1,500-QA evaluation benchmark produced by `benchmarking/` (see below), with
+  both prompt formats, reference answers/evidence, and DINOv3 cluster/centrality metadata
+  baked in. CC BY 4.0.
+
+Download one or both to populate `--data-dir` for training (`SEM-VQA`) and `--split
+benchmark` evaluation (`SEM-VQA-Bench`).
+
 ## Repository layout
 
 ```
@@ -30,8 +48,10 @@ SEM-VQA corpus, as two subcommands of one script:
 
 - `generate` — QA-pair generation over SEM micrographs (prompt version
   `v7_four_level_grounded`, gemini-2.5-flash via Vertex AI). This is the exact prompt and
-  pipeline logic used to produce the released corpus (309,518 QA pairs over 66,385 SEM
-  micrographs).
+  pipeline logic used for the raw generation run (309,518 QA pairs over 66,385 SEM panels,
+  before content-deduplication and quality filtering); the released **SEM-VQA** corpus
+  (224,026 QA pairs over 47,981 panels — see "Dataset" above) is that run after
+  `benchmarking/step3a_unique_images.py`-style dedup and QC.
 - `answer` — runs a model over a frozen benchmark and writes predictions in the schema used
   for scoring. This is the Gemini arm (gemini-3.1-flash-lite) of the rep300 answering
   benchmark; the other proprietary arms used a different SDK each and are not included, so
@@ -128,7 +148,9 @@ Format-A adapters under the evidence prompt, isolating prompt format from traini
 ## Benchmark construction
 
 `benchmarking/` selects 300 representative SEM images from the corpus and freezes them into
-a benchmark of 1,497 QA pairs with both prompt formats baked in.
+a benchmark of 1,497 QA pairs with both prompt formats baked in. This is the pipeline that
+produced the released **[SEM-VQA-Bench](https://huggingface.co/datasets/uhbuvbuvu/sem-vqa-bench)**
+dataset (see "Dataset" above).
 
 Inputs:
 - `sem_vqa_corpus.jsonl` — 224,026 QA records over 47,981 images
@@ -167,3 +189,8 @@ the largest distance gap and then on seeded random. Step 2 defaults to HDBSCAN; 
 `download.py` and the environment bootstrap script are omitted; both hardcode paths
 specific to the machines they ran on. The split-construction scripts (`build_splits.py`,
 `build_stage2_vqa.py`) are omitted for the same reason.
+
+## License
+
+The **SEM-VQA** and **SEM-VQA-Bench** datasets are released under CC BY 4.0 (see their
+dataset cards, linked under "Dataset" above).
