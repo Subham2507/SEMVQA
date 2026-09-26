@@ -1,0 +1,9 @@
+# Versions recorded in every run_config.json of the released runs.
+# CUDA 13.0, NVIDIA GH200 480GB, python 3.12.14.
+torch==2.14.0
+transformers==5.17.0
+peft==0.20.0          # stage-1, B2-A, B3-A; the other four cells used 0.21.0
+torchvision
+packaging
+pillow
+matplotlib            # plot_log.py only
